@@ -45,8 +45,12 @@ func makeStackHappy(s string) int {
 	return numFlips
 }
 
-/* create a new struct function */
-func tests(t int, testCases []string) ([]string, error) {
+type TestSuite struct {
+	T         int
+	TestCases []string
+}
+
+func NewTestSuite(t int, testCases []string) (*TestSuite, error) {
 	if t < 1 {
 		return nil, fmt.Errorf("There must be at least one test case.")
 	}
@@ -60,20 +64,40 @@ func tests(t int, testCases []string) ([]string, error) {
 	if !validSet {
 		return nil, fmt.Errorf("Test case strings must include only '+' and '-' characters.")
 	}
+	test := &TestSuite{
+		T:         t,
+		TestCases: testCases,
+	}
+	return test, nil
+}
 
+type Test struct {
+	CaseNum  int
+	NumFlips int
+}
+
+func NewTest(caseNum int, numFlips int) *Test {
+	t := Test{
+		CaseNum:  caseNum,
+		NumFlips: numFlips,
+	}
+	return &t
+}
+
+func (ts *TestSuite) Run() []*Test {
 	var wg sync.WaitGroup
-	results := make([]string, len(testCases))
-	for i, v := range testCases {
+	results := make([]*Test, len(ts.TestCases))
+	for i, v := range ts.TestCases {
 		wg.Add(1)
 		go func(i int, v string) {
 			defer wg.Done()
+			caseNum := i + 1
 			numFlips := makeStackHappy(v)
-			result := "Case #" + strconv.Itoa(i+1) + ": " + strconv.Itoa(numFlips)
-			results[i] = result
+			results[i] = NewTest(caseNum, numFlips)
 		}(i, v)
 	}
 	wg.Wait()
-	return results, nil
+	return results
 }
 
 func main() {
@@ -85,12 +109,15 @@ func main() {
 		"--+-",
 	}
 	t := len(testCases)
-	results, err := tests(t, testCases)
+	tests, err := NewTestSuite(t, testCases)
+	results := tests.Run()
 	if err != nil {
 		fmt.Println("Input error: ", err)
 	} else {
-		for _, result := range results {
-			fmt.Println(result)
+		for _, v := range results {
+			caseNum := strconv.Itoa(v.CaseNum)
+			numFlips := strconv.Itoa(v.NumFlips)
+			fmt.Printf("Case #%v: %v\n", caseNum, numFlips)
 		}
 	}
 }
