@@ -1,8 +1,30 @@
-const flipGroup = (pancakes, pos) => {
+const flipGroup = (pancakes, flipToIndex) => {
   const pSub = pancakes
-    .slice(0, pos + 1)
+    .slice(0, flipToIndex + 1)
+    .reverse()
     .map(pancake => pancake === '-' ? '+' : '-');
-  pancakes.splice(0, pSub.length, ...pSub);
+  pancakes.splice(0, flipToIndex + 1, ...pSub);
+};
+
+const flipGroupsFrom = (pancakes, flipFromIndex) => {
+  let numFlips = 0;
+  let flipToIndex = -1;
+  if (pancakes[0] === '+') {
+    for (let i = 0; i < pancakes.length; i++) {
+      if (pancakes[i] === '+') {
+        flipToIndex = i;
+      } else {
+        break;
+      }
+    }
+  }
+  if (flipToIndex > -1) {
+    flipGroup(pancakes, flipToIndex);
+    numFlips++;
+  }
+  flipGroup(pancakes, flipFromIndex);
+  numFlips++;
+  return numFlips;
 }
 
 const makeStackHappy = (string) => {
@@ -13,8 +35,7 @@ const makeStackHappy = (string) => {
   while (pos >= 0 && numFlips <= len) {
     const needToFlip = pancakes[pos] === '-';
     if (needToFlip) {
-      flipGroup(pancakes, pos);
-      numFlips++;
+      numFlips += flipGroupsFrom(pancakes, pos);
     }
     pos--;
   }
@@ -34,7 +55,7 @@ const tests = (t, testCases) => {
   }
   return testCases
     .map(s => makeStackHappy(s))
-    .map((result, index) => `Case #${index}: ${result}`);
+    .map((result, index) => `Case #${index+1}: ${result}`);
 }
 
 const testCases = [
@@ -43,6 +64,8 @@ const testCases = [
   '+-',
   '+++',
   '--+-',
+  // '-+-+--',
+  // '---++--',
 ];
 const t = testCases.length;
 console.log('results:', tests(t, testCases));

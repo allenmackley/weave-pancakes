@@ -17,8 +17,15 @@ func All(vs []string, f func(string) bool) bool {
 	return true
 }
 
-func flipGroup(pancakes []string, pos int) {
-	pSub := pancakes[:pos+1]
+func reverse(s []string) []string {
+	for i, j := 0, len(s)-1; i < j; i, j = i+1, j-1 {
+		s[i], s[j] = s[j], s[i]
+	}
+	return s
+}
+
+func flipGroup(pancakes []string, flipToIndex int) {
+	pSub := reverse(pancakes[:flipToIndex+1])
 	for i, v := range pSub {
 		if v == "-" {
 			pancakes[i] = "+"
@@ -26,6 +33,27 @@ func flipGroup(pancakes []string, pos int) {
 			pancakes[i] = "-"
 		}
 	}
+}
+
+func flipGroupsFrom(pancakes []string, flipFromIndex int) int {
+	var numFlips int
+	flipToIndex := -1
+	if string(pancakes[0]) == "+" {
+		for i := 0; i < len(pancakes); i++ {
+			if string(pancakes[i]) == "+" {
+				flipToIndex = i
+			} else {
+				break
+			}
+		}
+	}
+	if flipToIndex > -1 {
+		flipGroup(pancakes, flipToIndex)
+		numFlips++
+	}
+	flipGroup(pancakes, flipFromIndex)
+	numFlips++
+	return numFlips
 }
 
 func makeStackHappy(s string) int {
@@ -37,8 +65,7 @@ func makeStackHappy(s string) int {
 	for pos >= 0 && numFlips <= l {
 		needToFlip = string(pancakes[pos]) == "-"
 		if needToFlip {
-			flipGroup(pancakes, pos)
-			numFlips++
+			numFlips += flipGroupsFrom(pancakes, pos)
 		}
 		pos--
 	}
@@ -107,6 +134,8 @@ func main() {
 		"+-",
 		"+++",
 		"--+-",
+		// "-+-+--",
+		// "---++--",
 	}
 	t := len(testCases)
 	tests, err := NewTestSuite(t, testCases)
