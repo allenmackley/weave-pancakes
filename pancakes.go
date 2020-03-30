@@ -139,10 +139,10 @@ func main() {
 	}
 	t := len(testCases)
 	tests, err := NewTestSuite(t, testCases)
-	results := tests.Run()
 	if err != nil {
 		fmt.Println("Input error: ", err)
 	} else {
+		results := tests.Run()
 		for _, v := range results {
 			caseNum := strconv.Itoa(v.CaseNum)
 			numFlips := strconv.Itoa(v.NumFlips)
