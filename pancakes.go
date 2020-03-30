@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 func All(vs []string, f func(string) bool) bool {
@@ -45,7 +46,7 @@ func makeStackHappy(s string) int {
 }
 
 /* create a new struct function */
-func tests(t int, testCases []string) (chan string, error) {
+func tests(t int, testCases []string) ([]string, error) {
 	if t < 1 {
 		return nil, fmt.Errorf("There must be at least one test case.")
 	}
@@ -60,13 +61,18 @@ func tests(t int, testCases []string) (chan string, error) {
 		return nil, fmt.Errorf("Test case strings must include only '+' and '-' characters.")
 	}
 
-	results := make(chan string)
-	go func() {
-		for i, v := range testCases {
+	var wg sync.WaitGroup
+	results := make([]string, len(testCases))
+	for i, v := range testCases {
+		wg.Add(1)
+		go func(i int, v string) {
+			defer wg.Done()
 			numFlips := makeStackHappy(v)
-			results <- "Case #" + strconv.Itoa(i) + ": " + strconv.Itoa(numFlips)
-		}
-	}()
+			result := "Case #" + strconv.Itoa(i+1) + ": " + strconv.Itoa(numFlips)
+			results[i] = result
+		}(i, v)
+	}
+	wg.Wait()
 	return results, nil
 }
 
@@ -83,8 +89,8 @@ func main() {
 	if err != nil {
 		fmt.Println("Input error: ", err)
 	} else {
-		for range testCases {
-			fmt.Println("Results: ", <-results)
+		for _, result := range results {
+			fmt.Println(result)
 		}
 	}
 }
