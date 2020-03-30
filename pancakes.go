@@ -44,7 +44,8 @@ func makeStackHappy(s string) int {
 	return numFlips
 }
 
-func tests(t int, testCases []string) ([]string, error) {
+/* create a new struct function */
+func tests(t int, testCases []string) (chan string, error) {
 	if t < 1 {
 		return nil, fmt.Errorf("There must be at least one test case.")
 	}
@@ -59,14 +60,13 @@ func tests(t int, testCases []string) ([]string, error) {
 		return nil, fmt.Errorf("Test case strings must include only '+' and '-' characters.")
 	}
 
-	numFlips := []int{}
-	results := []string{}
-	for _, v := range testCases {
-		numFlips = append(numFlips, makeStackHappy(v))
-	}
-	for i, v := range numFlips {
-		results = append(results, "Case #"+strconv.Itoa(i)+": "+strconv.Itoa(v))
-	}
+	results := make(chan string)
+	go func() {
+		for i, v := range testCases {
+			numFlips := makeStackHappy(v)
+			results <- "Case #" + strconv.Itoa(i) + ": " + strconv.Itoa(numFlips)
+		}
+	}()
 	return results, nil
 }
 
@@ -83,6 +83,8 @@ func main() {
 	if err != nil {
 		fmt.Println("Input error: ", err)
 	} else {
-		fmt.Println("Results: ", results)
+		for range testCases {
+			fmt.Println("Results: ", <-results)
+		}
 	}
 }
