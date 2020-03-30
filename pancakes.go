@@ -8,7 +8,7 @@ import (
 	"sync"
 )
 
-func All(vs []string, f func(string) bool) bool {
+func all(vs []string, f func(string) bool) bool {
 	for _, v := range vs {
 		if !f(v) {
 			return false
@@ -72,55 +72,55 @@ func makeStackHappy(s string) int {
 	return numFlips
 }
 
-type TestSuite struct {
+type testSuite struct {
 	T         int
 	TestCases []string
 }
 
-func NewTestSuite(t int, testCases []string) (*TestSuite, error) {
+func newTestSuite(t int, testCases []string) (*testSuite, error) {
 	if t < 1 {
-		return nil, fmt.Errorf("There must be at least one test case.")
+		return nil, fmt.Errorf("there must be at least one test case")
 	}
 	if t > 100 {
-		return nil, fmt.Errorf("Too many test cases. Max 100.")
+		return nil, fmt.Errorf("too many test cases. Max 100")
 	}
 	r, _ := regexp.Compile("^[-+]+$")
-	validSet := All(testCases, func(s string) bool {
+	validSet := all(testCases, func(s string) bool {
 		return r.MatchString(s)
 	})
 	if !validSet {
-		return nil, fmt.Errorf("Test case strings must include only '+' and '-' characters.")
+		return nil, fmt.Errorf("test case strings must include only '+' and '-' characters")
 	}
-	test := &TestSuite{
+	test := &testSuite{
 		T:         t,
 		TestCases: testCases,
 	}
 	return test, nil
 }
 
-type Test struct {
+type testCase struct {
 	CaseNum  int
 	NumFlips int
 }
 
-func NewTest(caseNum int, numFlips int) *Test {
-	t := &Test{
+func newTestCase(caseNum int, numFlips int) *testCase {
+	t := &testCase{
 		CaseNum:  caseNum,
 		NumFlips: numFlips,
 	}
 	return t
 }
 
-func (ts *TestSuite) Run() []*Test {
+func (ts *testSuite) run() []*testCase {
 	var wg sync.WaitGroup
-	results := make([]*Test, len(ts.TestCases))
+	results := make([]*testCase, len(ts.TestCases))
 	for i, v := range ts.TestCases {
 		wg.Add(1)
 		go func(i int, v string) {
 			defer wg.Done()
 			caseNum := i + 1
 			numFlips := makeStackHappy(v)
-			results[i] = NewTest(caseNum, numFlips)
+			results[i] = newTestCase(caseNum, numFlips)
 		}(i, v)
 	}
 	wg.Wait()
@@ -138,11 +138,11 @@ func main() {
 		// "---++--",
 	}
 	t := len(testCases)
-	tests, err := NewTestSuite(t, testCases)
+	tests, err := newTestSuite(t, testCases)
 	if err != nil {
 		fmt.Println("Input error: ", err)
 	} else {
-		results := tests.Run()
+		results := tests.run()
 		for _, v := range results {
 			caseNum := strconv.Itoa(v.CaseNum)
 			numFlips := strconv.Itoa(v.NumFlips)
