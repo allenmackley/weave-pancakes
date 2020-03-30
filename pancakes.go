@@ -104,11 +104,11 @@ type Test struct {
 }
 
 func NewTest(caseNum int, numFlips int) *Test {
-	t := Test{
+	t := &Test{
 		CaseNum:  caseNum,
 		NumFlips: numFlips,
 	}
-	return &t
+	return t
 }
 
 func (ts *TestSuite) Run() []*Test {
